@@ -10,6 +10,8 @@
   filter: drop-shadow(2px 4px 6px black);
   display: block;
   anchor-name: --stac--wiAnchor;
+  touch-action: none;
+  user-select: none;
 }
 .stwii--trigger:not([data-stwii--badge-count="0"]):hover::after {
   opacity: 1;
@@ -121,6 +123,14 @@
   flex: 0 0 auto;
   line-height: 0.125em;
   padding-bottom: 0.6em;
+}
+.stwii--reason {
+  font-size: 0.7em;
+  opacity: 0.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .stwii--configRow {
   display: flex;

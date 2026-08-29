@@ -1,11 +1,11 @@
-import { chat, chat_metadata, event_types, eventSource, main_api, saveSettingsDebounced } from '../../../../script.js';
+import { chat, chat_metadata, event_types, eventSource, main_api, saveSettingsDebounced, substituteParams } from '../../../../script.js';
 import { metadata_keys } from '../../../authors-note.js';
 import { extension_settings } from '../../../extensions.js';
 import { promptManager } from '../../../openai.js';
 import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
-import { delay } from '../../../utils.js';
-import { world_info_position } from '../../../world-info.js';
+import { delay, escapeRegex } from '../../../utils.js';
+import { parseRegexFromString, world_info_case_sensitive, world_info_depth, world_info_logic, world_info_match_whole_words, world_info_position } from '../../../world-info.js';
 
 const strategy = {
     constant: '🔵',
@@ -25,19 +25,171 @@ const getStrategy = (entry)=>{
 let generationType;
 eventSource.on(event_types.GENERATION_STARTED, (genType)=>generationType = genType);
 
+const logicNames = {
+    [world_info_logic.AND_ANY]: 'AND ANY',
+    [world_info_logic.NOT_ALL]: 'NOT ALL',
+    [world_info_logic.NOT_ANY]: 'NOT ANY',
+    [world_info_logic.AND_ALL]: 'AND ALL',
+};
+
+// mirrors WorldInfoBuffer.#transformString
+const transformString = (str, entry)=>{
+    const caseSensitive = entry.caseSensitive ?? world_info_case_sensitive;
+    return caseSensitive ? str : str.toLowerCase();
+};
+// mirrors WorldInfoBuffer.matchKeys
+const matchKey = (haystack, needle, entry)=>{
+    const keyRegex = parseRegexFromString(needle);
+    if (keyRegex) {
+        return keyRegex.test(haystack);
+    }
+    haystack = transformString(haystack, entry);
+    const transformedNeedle = transformString(needle, entry);
+    const matchWholeWords = entry.matchWholeWords ?? world_info_match_whole_words;
+    if (matchWholeWords) {
+        const keyWords = transformedNeedle.split(/\s+/);
+        if (keyWords.length > 1) {
+            return haystack.includes(transformedNeedle);
+        }
+        return new RegExp(`(?:^|\\W)(${escapeRegex(transformedNeedle)})(?:$|\\W)`).test(haystack);
+    }
+    return haystack.includes(transformedNeedle);
+};
+
+/**
+ * Figure out why an entry was activated: constant / sticky / vectorized,
+ * or which keywords matched (in recent chat messages or via recursion).
+ */
+const analyzeActivation = (entry, entryList)=>{
+    const reason = { type: 'keys', matchedKeys: [], secondary: [], logic: null };
+    if (entry.constant === true) {
+        reason.type = 'constant';
+        return reason;
+    }
+    let scanChat = [...chat];
+    if (generationType == 'swipe') scanChat.pop();
+    const depth = entry.scanDepth ?? world_info_depth;
+    const chatText = scanChat
+        .slice(-depth)
+        .map(m=>`${m.name}: ${m.mes}`)
+        .join('\n')
+    ;
+    for (const rawKey of entry.key ?? []) {
+        const key = substituteParams(rawKey);
+        if (matchKey(chatText, key, entry)) {
+            reason.matchedKeys.push({ key, source: 'chat' });
+            continue;
+        }
+        // not in chat → maybe activated through recursion (content of another activated entry)
+        for (const other of entryList) {
+            if (other == entry) continue;
+            if (matchKey(substituteParams(other.content ?? ''), key, entry)) {
+                reason.matchedKeys.push({ key, source: `↩ ${other.comment?.length ? other.comment : (other.key ?? []).join(', ')}` });
+                break;
+            }
+        }
+    }
+    if (entry.selective && entry.keysecondary?.length) {
+        reason.logic = entry.selectiveLogic ?? world_info_logic.AND_ANY;
+        for (const rawKey of entry.keysecondary) {
+            const key = substituteParams(rawKey);
+            reason.secondary.push({ key, matched: matchKey(chatText, key, entry) });
+        }
+    }
+    if (reason.matchedKeys.length == 0) {
+        if (entry.vectorized === true) reason.type = 'vectorized';
+        else if (entry.sticky > 0) reason.type = 'sticky';
+        else reason.type = 'unknown';
+    }
+    return reason;
+};
+
+const describeReason = (entry)=>{
+    const r = entry.stwiiReason;
+    if (!r) return '';
+    const parts = [];
+    if (r.type == 'constant') parts.push('🔵 Constant — always active');
+    if (r.type == 'sticky') parts.push(`📌 Sticky — no key matched, still active for ${entry.sticky} more rounds`);
+    if (r.type == 'vectorized') parts.push('🔗 Vectorized — activated by vector similarity, no literal key match');
+    for (const k of r.matchedKeys) {
+        parts.push(k.source == 'chat'
+            ? `🔑 "${k.key}" — found in scanned messages`
+            : `🔑 "${k.key}" — via recursion from entry "${k.source.slice(2)}"`);
+    }
+    if (r.secondary?.length) {
+        parts.push(`Filter (${logicNames[r.logic]}): ${r.secondary.map(s=>`${s.matched ? '✔' : '✘'} "${s.key}"`).join('  ')}`);
+    }
+    if (r.type == 'unknown') parts.push('❓ No key match found (forced activation, /trigger, or external extension?)');
+    return parts.join('\n');
+};
+
 const init = ()=>{
+    let wasDragged = false;
     const trigger = document.createElement('div'); {
         trigger.classList.add('stwii--trigger');
         trigger.classList.add('fa-solid', 'fa-fw', 'fa-book-atlas');
-        trigger.title = 'Active WI\n---\nright click for options';
+        trigger.title = 'Active WI\n---\nright click for options\ndrag to move';
         trigger.addEventListener('click', ()=>{
+            if (wasDragged) return;
             panel.classList.toggle('stwii--isActive');
         });
         trigger.addEventListener('contextmenu', (evt)=>{
             evt.preventDefault();
+            if (wasDragged) return;
             configPanel.classList.toggle('stwii--isActive');
         });
+        // drag to move (position saved in settings)
+        const applyTriggerPos = ()=>{
+            const pos = extension_settings.worldInfoInfo?.triggerPos;
+            if (!pos) return;
+            const rect = trigger.getBoundingClientRect();
+            const left = Math.min(Math.max(0, pos.left), window.innerWidth - rect.width);
+            const top = Math.min(Math.max(0, pos.top), window.innerHeight - rect.height);
+            trigger.style.left = `${left}px`;
+            trigger.style.top = `${top}px`;
+            trigger.style.bottom = 'auto';
+            trigger.style.right = 'auto';
+        };
+        trigger.addEventListener('pointerdown', (evt)=>{
+            if (evt.button !== 0) return;
+            const startX = evt.clientX;
+            const startY = evt.clientY;
+            const rect = trigger.getBoundingClientRect();
+            const offsetX = startX - rect.left;
+            const offsetY = startY - rect.top;
+            wasDragged = false;
+            const onMove = (e)=>{
+                if (!wasDragged && Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
+                wasDragged = true;
+                const left = Math.min(Math.max(0, e.clientX - offsetX), window.innerWidth - rect.width);
+                const top = Math.min(Math.max(0, e.clientY - offsetY), window.innerHeight - rect.height);
+                trigger.style.left = `${left}px`;
+                trigger.style.top = `${top}px`;
+                trigger.style.bottom = 'auto';
+                trigger.style.right = 'auto';
+            };
+            const onUp = ()=>{
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+                window.removeEventListener('pointercancel', onUp);
+                if (wasDragged) {
+                    const rect = trigger.getBoundingClientRect();
+                    if (!extension_settings.worldInfoInfo) {
+                        extension_settings.worldInfoInfo = {};
+                    }
+                    extension_settings.worldInfoInfo.triggerPos = { left: rect.left, top: rect.top };
+                    saveSettingsDebounced();
+                    // let the click event fire (and get ignored) before resetting
+                    setTimeout(()=>wasDragged = false, 0);
+                }
+            };
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+            window.addEventListener('pointercancel', onUp);
+        });
+        window.addEventListener('resize', applyTriggerPos);
         document.body.append(trigger);
+        applyTriggerPos();
     }
     const panel = document.createElement('div'); {
         panel.classList.add('stwii--panel');
@@ -161,6 +313,13 @@ const init = ()=>{
                 },
                 entry.uid,
             )));
+        }
+        for (const entry of entryList) {
+            try {
+                entry.stwiiReason = analyzeActivation(entry, entryList);
+            } catch (ex) {
+                console.warn('[STWII] failed to analyze activation reason', ex);
+            }
         }
         currentEntryList = [...entryList];
         updatePanel(entryList, true);
@@ -324,7 +483,15 @@ const init = ()=>{
                             title.classList.add('stwii--title');
                             if (entry.type == 'wi') {
                                 title.textContent = entry.comment?.length ? entry.comment : entry.key.join(', ');
-                                e.title += `[${entry.world}] ${entry.comment?.length ? entry.comment : entry.key.join(', ')}\n---\n${entry.content}`;
+                                const reasonText = describeReason(entry);
+                                e.title += `[${entry.world}] ${entry.comment?.length ? entry.comment : entry.key.join(', ')}\n---\n${reasonText.length ? `${reasonText}\n---\n` : ''}${entry.content}`;
+                                if (entry.stwiiReason?.matchedKeys?.length) {
+                                    const reason = document.createElement('div'); {
+                                        reason.classList.add('stwii--reason');
+                                        reason.textContent = entry.stwiiReason.matchedKeys.map(k=>k.source == 'chat' ? k.key : `↩${k.key}`).join(', ');
+                                        title.append(reason);
+                                    }
+                                }
                             } else if (entry.type == 'mes') {
                                 const first = document.createElement('div'); {
                                     first.classList.add('stwii--first');
