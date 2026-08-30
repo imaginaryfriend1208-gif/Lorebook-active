@@ -2,29 +2,44 @@
     position: absolute;
     bottom: 0.125em;
     left: 0.25em;
-    font-size: 2em;
-    opacity: 0.25;
-    transition: opacity 200ms;
+    font-size: 1.5em;
+    opacity: 0.85;
+    transition: opacity 200ms, transform 200ms;
     cursor: pointer;
     z-index: 3010;
     filter: drop-shadow(2px 4px 6px black);
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75em;
+    height: 1.75em;
+    border-radius: 50%;
+    background-color: var(--SmartThemeBlurTintColor, rgba(30, 30, 30, 0.8));
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.3));
+    color: var(--SmartThemeBodyColor, white);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
     anchor-name: --stac--wiAnchor;
     touch-action: none;
     user-select: none;
+
+    &:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
 
     &:not([data-stwii--badge-count="0"]) {
         &:hover::after { opacity: 1; }
         &::after {
             content: attr(data-stwii--badge-count);
             position: absolute;
-            bottom: 0;
-            right: 0;
+            bottom: -0.2em;
+            right: -0.2em;
+            background: var(--crimson70a, #b22);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             font-size: calc(0.65 * var(--mainFontSize));
             font-weight: bold;
             font-family: var(--mainFontFamily);
             color: white;
-            background: black;
             line-height: 1;
             padding: 0.25em;
             border-radius: 50%;
