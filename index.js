@@ -125,18 +125,49 @@ const describeReason = (entry)=>{
 
 const init = ()=>{
     let wasDragged = false;
+    const closeAll = ()=>{
+        panel.classList.remove('stwii--isActive');
+        configPanel.classList.remove('stwii--isActive');
+        backdrop.classList.remove('stwii--isActive');
+    };
+    const syncBackdrop = ()=>{
+        const anyOpen = panel.classList.contains('stwii--isActive') || configPanel.classList.contains('stwii--isActive');
+        backdrop.classList.toggle('stwii--isActive', anyOpen);
+    };
+    const makeHeader = (parent, titleText)=>{
+        const header = document.createElement('div'); {
+            header.classList.add('stwii--panelHeader');
+            const title = document.createElement('div'); {
+                title.classList.add('stwii--panelTitle');
+                title.textContent = titleText;
+                header.append(title);
+            }
+            const close = document.createElement('div'); {
+                close.classList.add('stwii--panelClose');
+                close.classList.add('fa-solid', 'fa-fw', 'fa-xmark');
+                close.title = 'Close';
+                close.addEventListener('click', closeAll);
+                header.append(close);
+            }
+            parent.append(header);
+        }
+    };
     const trigger = document.createElement('div'); {
         trigger.classList.add('stwii--trigger');
         trigger.classList.add('fa-solid', 'fa-fw', 'fa-book-atlas');
         trigger.title = 'Active WI\n---\nright click for options\ndrag to move';
         trigger.addEventListener('click', ()=>{
             if (wasDragged) return;
+            configPanel.classList.remove('stwii--isActive');
             panel.classList.toggle('stwii--isActive');
+            syncBackdrop();
         });
         trigger.addEventListener('contextmenu', (evt)=>{
             evt.preventDefault();
             if (wasDragged) return;
+            panel.classList.remove('stwii--isActive');
             configPanel.classList.toggle('stwii--isActive');
+            syncBackdrop();
         });
         // drag to move (position saved in settings)
         const applyTriggerPos = ()=>{
@@ -191,13 +222,24 @@ const init = ()=>{
         document.body.append(trigger);
         applyTriggerPos();
     }
+    const backdrop = document.createElement('div'); {
+        backdrop.classList.add('stwii--backdrop');
+        backdrop.addEventListener('click', closeAll);
+        document.body.append(backdrop);
+    }
     const panel = document.createElement('div'); {
         panel.classList.add('stwii--panel');
-        panel.innerHTML = '?';
         document.body.append(panel);
+    }
+    makeHeader(panel, 'Active World Info');
+    const panelBody = document.createElement('div'); {
+        panelBody.classList.add('stwii--panelBody');
+        panelBody.innerHTML = '?';
+        panel.append(panelBody);
     }
     const configPanel = document.createElement('div'); {
         configPanel.classList.add('stwii--panel');
+        makeHeader(configPanel, 'Options');
         const rowGroup = document.createElement('label'); {
             rowGroup.classList.add('stwii--configRow');
             rowGroup.title = 'Group entries by World Info book';
@@ -299,7 +341,7 @@ const init = ()=>{
     let currentEntryList = [];
     let currentChat = [];
     eventSource.on(event_types.WORLD_INFO_ACTIVATED, async(entryList)=>{
-        panel.innerHTML = 'Updating...';
+        panelBody.innerHTML = 'Updating...';
         updateBadge(entryList.map(it=>`${it.world}§§§${it.uid}`));
         for (const entry of entryList) {
             entry.type = 'wi';
@@ -330,7 +372,7 @@ const init = ()=>{
         const isGrouped = extension_settings.worldInfoInfo?.group ?? true;
         const isOrdered = extension_settings.worldInfoInfo?.order ?? true;
         const isMes = extension_settings.worldInfoInfo?.mes ?? true;
-        panel.innerHTML = '';
+        panelBody.innerHTML = '';
         let grouped;
         if (isGrouped) {
             grouped = Object.groupBy(entryList, (it,idx)=>it.world);
@@ -347,7 +389,7 @@ const init = ()=>{
             const w = document.createElement('div'); {
                 w.classList.add('stwii--world');
                 w.textContent = world;
-                panel.append(w);
+                panelBody.append(w);
                 entries.sort((a,b)=>{
                     if (isOrdered) {
                         // order by strategy / depth / order
@@ -525,7 +567,7 @@ const init = ()=>{
                             sticky.title = `Sticky for ${entry.sticky} more rounds`;
                             e.append(sticky);
                         }
-                        panel.append(e);
+                        panelBody.append(e);
                     }
                 }
             }
@@ -540,7 +582,7 @@ const init = ()=>{
             '[WI] Adding 0 entries to prompt',
         ];
         if (triggers.includes(args[0])) {
-            panel.innerHTML = 'No active entries';
+            panelBody.innerHTML = 'No active entries';
             updateBadge([]);
             currentEntryList = [];
         }
@@ -553,7 +595,7 @@ const init = ()=>{
             '[WI] Adding 0 entries to prompt',
         ];
         if (triggers.includes(args[0])) {
-            panel.innerHTML = 'No active entries';
+            panelBody.innerHTML = 'No active entries';
             updateBadge([]);
             currentEntryList = [];
         }

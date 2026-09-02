@@ -62,29 +62,84 @@
     }
 }
 
+.stwii--backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 29999;
+    background-color: rgb(0 0 0 / 0.4);
+    backdrop-filter: blur(2px);
+
+    &.stwii--isActive {
+        display: block;
+    }
+}
+
 .stwii--panel {
     filter: drop-shadow(1px 1px 2px var(--black50a));
     z-index: 30000;
-    overflow: auto;
     border-radius: 10px;
     aspect-ratio: unset;
-    padding: 0.5em;
+    padding: 0;
     display: none;
     flex-direction: column;
-    right: 3.5em;
-    top: 1em;
     font-size: small;
-    max-height: calc(100vh - 1em);
-    max-width: calc((100vw - var(--sheldWidth)) / 2 - 3.5em);
-    background-color: var(--secondaryBg, var(--SmartThemeBlurTintColor));
     position: fixed;
-    position-anchor: --stac--wiAnchor;
-    position-area: top right;
-    position-try-fallbacks: flip-block, flip-inline;
-    margin-bottom: -2em;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(40em, 90vw);
+    max-height: 80vh;
+    background-color: var(--secondaryBg, var(--SmartThemeBlurTintColor));
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2));
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
 
     &.stwii--isActive {
         display: flex;
+        animation: stwii--panel-in 200ms ease-out;
+    }
+}
+
+.stwii--panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0.5em 0.75em;
+    border-bottom: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2));
+    flex: 0 0 auto;
+}
+.stwii--panelTitle {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.stwii--panelClose {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 200ms;
+    padding: 0.25em;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+.stwii--panelBody {
+    overflow: auto;
+    padding: 0.5em 0.75em;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+
+@keyframes stwii--panel-in {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
@@ -160,9 +215,8 @@
 .stwii--reason {
     font-size: 0.7em;
     opacity: 0.6;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: break-word;
     max-width: 100%;
 }
 .stwii--configRow {
