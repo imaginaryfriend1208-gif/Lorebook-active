@@ -224,12 +224,14 @@ const init = ()=>{
     }
     const backdrop = document.createElement('div'); {
         backdrop.classList.add('stwii--backdrop');
-        backdrop.addEventListener('click', closeAll);
+        backdrop.addEventListener('click', (evt)=>{
+            if (evt.target === backdrop) closeAll();
+        });
         document.body.append(backdrop);
     }
     const panel = document.createElement('div'); {
         panel.classList.add('stwii--panel');
-        document.body.append(panel);
+        backdrop.append(panel);
     }
     makeHeader(panel, 'Active World Info');
     const panelBody = document.createElement('div'); {
@@ -306,7 +308,7 @@ const init = ()=>{
             }
             configPanel.append(mesRow);
         }
-        document.body.append(configPanel);
+        backdrop.append(configPanel);
     }
 
     let entries = [];
