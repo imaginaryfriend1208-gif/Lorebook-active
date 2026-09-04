@@ -72,7 +72,8 @@
   z-index: 29999;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(2px);
-  overflow: auto !important;
+  align-items: center;
+  justify-content: center;
 }
 .stwii--backdrop.stwii--isActive {
   display: flex !important;
@@ -87,15 +88,14 @@
   flex-direction: column;
   font-size: small;
   width: min(40em, 90vw);
-  max-height: min(80vh, 80dvh);
-  margin: auto !important;
+  max-height: 80vh;
   background-color: var(--secondaryBg, var(--SmartThemeBlurTintColor));
   border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2));
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 }
 .stwii--panel.stwii--isActive {
-  display: flex;
+  display: flex !important;
   animation: stwii--panel-in 200ms ease-out;
 }
 .stwii--panelHeader {
