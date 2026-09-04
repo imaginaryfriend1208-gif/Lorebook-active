@@ -72,11 +72,10 @@
   z-index: 29999;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(2px);
-  align-items: center;
-  justify-content: center;
+  overflow: auto !important;
 }
 .stwii--backdrop.stwii--isActive {
-  display: flex;
+  display: flex !important;
 }
 .stwii--panel {
   filter: drop-shadow(1px 1px 2px var(--black50a));
@@ -89,6 +88,7 @@
   font-size: small;
   width: min(40em, 90vw);
   max-height: min(80vh, 80dvh);
+  margin: auto !important;
   background-color: var(--secondaryBg, var(--SmartThemeBlurTintColor));
   border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2));
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
