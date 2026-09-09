@@ -104,7 +104,7 @@
 .lbi--badge {
   position: absolute; top: -4px; right: -4px;
   min-width: 19px; height: 19px; border-radius: 10px;
-  background: #ff5470; color: #fff;
+  background: rgba(110,110,110,.95); color: #fff;
   font: 700 11px/19px var(--mainFontFamily, sans-serif);
   text-align: center; padding: 0 5px; box-sizing: border-box;
   border: 1px solid rgba(255,255,255,.6);
@@ -112,14 +112,24 @@
 }
 .lbi--trigger[data-lbi--count]:not([data-lbi--count="0"]) .lbi--badge { display: block; }
 #lbi--backdrop {
-  display: none; position: fixed; inset: 0; z-index: 30999;
+  display: none; position: fixed; top: 0; left: 0; z-index: 30999;
+  width: 100vw;
+  /* svh = visible viewport with browser UI shown (iOS Safari topbar safe) */
+  height: 100vh;
+  height: 100svh;
   background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
-  overflow: auto !important;
+  align-items: center; justify-content: center;
+  /* keep clear of notch / rounded corners */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
 }
 #lbi--backdrop.lbi--isOpen { display: flex !important; }
 .lbi--modal {
   display: none; flex-direction: column;
-  width: min(420px, 92vw); max-height: min(78vh, 78dvh);
+  width: min(420px, 92vw);
+  max-height: 75vh;
+  max-height: 75svh;
   margin: auto !important;
   border-radius: 16px; overflow: hidden;
   background: var(--SmartThemeBlurTintColor, rgba(20,22,34,.92));
