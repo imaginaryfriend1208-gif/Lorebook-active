@@ -68,12 +68,21 @@
 .stwii--backdrop {
   display: none;
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  /* svh = visible viewport with browser UI shown (iOS Safari topbar safe) */
+  height: 100vh;
+  height: 100svh;
   z-index: 29999;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(2px);
   align-items: center;
   justify-content: center;
+  /* keep clear of notch / rounded corners */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
 }
 .stwii--backdrop.stwii--isActive {
   display: flex !important;
@@ -88,7 +97,10 @@
   flex-direction: column;
   font-size: small;
   width: min(40em, 90vw);
-  max-height: 80vh;
+  /* margin:auto inside flex = perfectly centered, and never overflows the container */
+  margin: auto;
+  max-height: 75vh;
+  max-height: 75svh;
   background-color: var(--secondaryBg, var(--SmartThemeBlurTintColor));
   border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.2));
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
