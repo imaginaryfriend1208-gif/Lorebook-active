@@ -23,9 +23,11 @@ const getTooltip = ()=>{
         tooltip = document.createElement('div');
         tooltip.id = 'stwii--tooltip';
         document.body.append(tooltip);
-        // dismiss on tap elsewhere (mobile)
+        // dismiss on tap/click anywhere else (old tooltip always goes away)
         document.addEventListener('pointerdown', (evt)=>{
-            if (tooltip.style.display == 'block' && !tooltip.contains(evt.target) && evt.target !== tooltip.stwiiAnchor) {
+            const anchor = tooltip.stwiiAnchor;
+            const onAnchor = anchor && (anchor === evt.target || anchor.contains?.(evt.target));
+            if (tooltip.style.display == 'block' && !tooltip.contains(evt.target) && !onAnchor) {
                 hideTooltip();
             }
         }, true);
@@ -104,14 +106,29 @@ const attachHints = (root)=>{
         icon.classList.add('stwii--hintIcon', 'fa-solid', 'fa-circle-question');
         icon.tabIndex = -1;
         const html = `<div class="stwii--tooltipTitle">${esc(def.title)}</div><div class="stwii--tooltipBody">${esc(def.text)}</div>`;
+        let hoverShown = false;
         icon.addEventListener('click', (evt)=>{
             evt.preventDefault();
             evt.stopPropagation();
-            if (getTooltip().stwiiAnchor === icon && tooltip.style.display == 'block') hideTooltip();
-            else showTooltip(icon, html);
+            // second tap/click on the same icon closes it (but not right after a hover-open)
+            if (getTooltip().stwiiAnchor === icon && tooltip.style.display == 'block' && !hoverShown) {
+                hideTooltip();
+            } else {
+                showTooltip(icon, html);
+                hoverShown = false;
+            }
         });
-        icon.addEventListener('mouseenter', ()=>showTooltip(icon, html));
-        icon.addEventListener('mouseleave', hideTooltip);
+        // hover only for real mouse — emulated hover on touch would fight with the tap
+        icon.addEventListener('pointerenter', (evt)=>{
+            if (evt.pointerType !== 'mouse') return;
+            showTooltip(icon, html);
+            hoverShown = true;
+        });
+        icon.addEventListener('pointerleave', (evt)=>{
+            if (evt.pointerType !== 'mouse') return;
+            hideTooltip();
+            hoverShown = false;
+        });
         anchor.append(icon);
     }
 };
