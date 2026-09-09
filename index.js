@@ -6,6 +6,7 @@ import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { delay, escapeRegex } from '../../../utils.js';
 import { parseRegexFromString, world_info_case_sensitive, world_info_depth, world_info_logic, world_info_match_whole_words, world_info_position } from '../../../world-info.js';
+import { initGuide } from './wi-guide.js';
 
 const strategy = {
     constant: '🔵',
@@ -613,3 +614,4 @@ const init = ()=>{
     }));
 };
 init();
+initGuide();

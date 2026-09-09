@@ -275,3 +275,71 @@
     transform: scale(1) translateY(0);
   }
 }
+
+/* ===== Live guide: hint icons, tooltip, keyword cross-link underlines ===== */
+.stwii--hintIcon {
+  font-size: 0.8em;
+  opacity: 0.45;
+  margin-left: 0.35em;
+  cursor: help;
+  transition: opacity 200ms;
+  vertical-align: baseline;
+}
+.stwii--hintIcon:hover {
+  opacity: 1;
+}
+#stwii--tooltip {
+  display: none;
+  position: fixed;
+  z-index: 31000;
+  max-width: min(22em, 85vw);
+  padding: 0.6em 0.75em;
+  border-radius: 8px;
+  background-color: var(--SmartThemeBlurTintColor, rgba(20, 22, 34, 0.95));
+  border: 1px solid var(--SmartThemeBorderColor, rgba(255, 255, 255, 0.25));
+  color: var(--SmartThemeBodyColor, #eee);
+  font-size: 0.85em;
+  line-height: 1.4;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+#stwii--tooltip .stwii--tooltipTitle {
+  font-weight: bold;
+  margin-bottom: 0.35em;
+}
+#stwii--tooltip .stwii--tooltipBody {
+  white-space: pre-wrap;
+  opacity: 0.9;
+}
+.stwii--contentWrap {
+  position: relative;
+  width: 100%;
+}
+.stwii--contentWrap textarea[name="content"] {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  width: 100%;
+}
+.stwii--contentOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  color: transparent;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.stwii--contentOverlay .stwii--kw {
+  pointer-events: auto;
+  cursor: help;
+  border-bottom: 2px solid rgba(90, 170, 255, 0.85);
+  border-radius: 1px;
+}
+.stwii--contentOverlay .stwii--kw-blocked {
+  border-bottom: 2px dotted rgba(255, 170, 60, 0.9);
+}
