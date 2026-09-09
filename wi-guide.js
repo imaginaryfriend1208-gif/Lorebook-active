@@ -1,4 +1,4 @@
-// Lorebook Active — Live Guide for the World Info editor
+// IF Lorebook — Live Guide for the World Info editor
 // - Underlines words in an entry's Content that are keywords of OTHER entries
 //   in the same lorebook (potential recursion triggers). Hover/tap to see
 //   which entry it links to and its trigger chance.

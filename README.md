@@ -1,4 +1,4 @@
-# SillyTavern - Lorebook Active
+# SillyTavern - IF Lorebook
 
 See which WorldInfo / Lorebook entries were active in the last generated message — and why they were activated (matched keywords, recursion, constant, sticky, vectorized).
 

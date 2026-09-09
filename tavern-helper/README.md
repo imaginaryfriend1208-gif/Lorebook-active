@@ -1,14 +1,14 @@
-# Lorebook Active — Tavern Helper popup script
+# IF Lorebook — Tavern Helper popup script
 
 Standalone script that shows the active World Info list in a custom centered
 popup. Runs inside [Tavern Helper (JS-Slash-Runner)](https://github.com/N0VI028/JS-Slash-Runner)
 and reads its data from the `/wi-triggered` slash command provided by the
-**Lorebook Active** extension — both must be installed.
+**IF Lorebook** extension — both must be installed.
 
 ## Install
 
 1. SillyTavern → Extensions → install **Tavern Helper** (JS-Slash-Runner).
-2. Keep the **Lorebook Active** extension installed (it provides `/wi-triggered`).
+2. Keep the **IF Lorebook** extension installed (it provides `/wi-triggered`).
 3. Tavern Helper panel → 脚本库 (Script Library) → 全局脚本 (Global Scripts) →
    create a new script.
 4. Paste the whole content of `wi-popup.js`, save, enable.

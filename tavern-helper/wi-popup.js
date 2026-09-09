@@ -1,5 +1,5 @@
-// Lorebook Active — Custom Popup UI (standalone script for Tavern Helper / JS-Slash-Runner)
-// Requires the "Lorebook Active" extension installed — it provides the /wi-triggered
+// IF Lorebook — Custom Popup UI (standalone script for Tavern Helper / JS-Slash-Runner)
+// Requires the "IF Lorebook" extension installed — it provides the /wi-triggered
 // slash command that returns the active World Info entry list as JSON.
 //
 // Install: Tavern Helper → 脚本库 (Script Library) → 全局脚本 (Global Script) →

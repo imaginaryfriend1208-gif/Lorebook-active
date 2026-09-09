@@ -1,4 +1,4 @@
-// Lorebook Active — Live Guide for the World Info editor (standalone for Tavern Helper / JS-Slash-Runner)
+// IF Lorebook — Live Guide for the World Info editor (standalone for Tavern Helper / JS-Slash-Runner)
 //
 // Install: Tavern Helper → 脚本库 (Script Library) → 全局脚本 (Global Script) →
 //          new script → paste this whole file → save & enable.
